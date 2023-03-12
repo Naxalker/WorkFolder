@@ -24,10 +24,6 @@ void uncompress() {
         error("failed to open archive");
     }
 
-    while (stat(archive_name, &st) == -1) {
-
-    }
-
     if (stat(archive_name, &st) == -1) {
         if (mkdir(archive_name, 0777) == -1) {
             error("failed to create folder");
@@ -54,12 +50,15 @@ void uncompress() {
     info = malloc(info_size + 1);
 
     rewind(archive);
-    fgets(info, info_size, archive);
+    fgets(info, info_size + 1, archive);
 
     file_info = div_into_files(info, &number_of_files);
 
+    fseek(archive, 1, SEEK_CUR);
+
     for (int i = 0; i < number_of_files; i++) {
         create_file(file_info[i], archive);
+        fseek(archive, 1, SEEK_CUR);
     }
 
     free(file_info);
@@ -67,9 +66,9 @@ void uncompress() {
 }
 
 void create_file(file_info file_info, FILE *archive) {
-    char *tmp = file_info.file_path;
-    char original_dir[4096];
+    char *tmp = file_info.file_path, *filename, original_dir[4096];
     int slashes = 0;
+    struct stat st;
 
     while (*tmp != '\0') {
         if (*tmp == '/') {
@@ -80,26 +79,44 @@ void create_file(file_info file_info, FILE *archive) {
     
     getcwd(original_dir, 4096);
 
-    for (int i = 0; i < slashes; i++) {
-        char *folder;
-        if (i == 0) {
-            folder = strtok(file_info.file_path, "/");
-        } else {
-            folder = strtok(NULL, "/");
-        }
-        if (mkdir(folder, 0777) == -1) {
-            error("failed to create folder");
-        }
-        chdir(folder);
-    }
+    if (slashes > 0) {
+        for (int i = 0; i < slashes; i++) {
+            char *folder;
+            if (i == 0) {
+                folder = strtok(file_info.file_path, "/");
+            } else {
+                folder = strtok(NULL, "/");
+            }
 
-    char *filename = strtok(NULL, "\0");
+            
+            if (stat(folder, &st) == -1) {
+                if (mkdir(folder, 0777) == -1) {
+                    error("failed to create folder");
+                }
+            }
+            chdir(folder);
+        }
+        filename = strtok(NULL, "\0");
+    } else {
+        filename = file_info.file_path;
+    }
 
     FILE *file = fopen(filename, "wb");
     if (file == NULL) {
         error("failed to create file");
     }
 
+    if (stat(filename, &st) == -1) {
+        error("failed to get file information");
+    }
+
+    char buffer[file_info.bytes + 1];
+    int bytes_read = fread(buffer, 1, file_info.bytes, archive);
+    buffer[bytes_read] = '\0';
+
+    fwrite(buffer, 1, bytes_read, file);
+
+    fclose(file);
     chdir(original_dir);
 }
 
@@ -109,7 +126,7 @@ file_info *div_into_files(char *str, int *elements) {
     }
 
     char *tmp = str;
-    int spaces = 1;
+    int spaces = 0;
     file_info *files;
 
     while(*tmp != '\0') {

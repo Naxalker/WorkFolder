@@ -1,1 +1,1 @@
-Лишь базовые сценарии поведения пользователей и по сей день остаются уделом либералов, которые жаждут быть функционально разнесены на независимые элементы. 
+Phasellus malesuada, neque et imperdiet posuere, felis lectus pellentesque turpis, a tempor diam eros vitae nibh. Integer quis orci id diam tempus viverra.
