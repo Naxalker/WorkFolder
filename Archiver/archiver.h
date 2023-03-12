@@ -1,8 +1,6 @@
 #ifndef ARCHIVER_H
 #define ARCHIVER_H
 
-#define __USE_MISC
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <dirent.h>
