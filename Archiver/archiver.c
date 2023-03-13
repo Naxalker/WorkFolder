@@ -10,11 +10,11 @@ int main() {
 }
 
 void uncompress() {
-    char archive_name[256], *info, ch;
+    char archive_name[256], archive_path[4096], *info, ch;
     int info_size = 0, number_of_files;
     FILE *archive;
     file_info *file_info;
-    struct stat st;
+    // struct stat st;
 
     printf("Enter the archive name: ");
     scanf("%255s", archive_name);
@@ -24,24 +24,33 @@ void uncompress() {
         error("failed to open archive");
     }
 
-    if (stat(archive_name, &st) == -1) {
-        if (mkdir(archive_name, 0777) == -1) {
-            error("failed to create folder");
-        }
-        chdir(archive_name);
-    } else {
-        while (stat(archive_name, &st) == 0) {
-            if (strlen(archive_name) > 253) {
-                error("archive name is too big");
-            }
+    printf("Enter the folder path: ");
+    scanf("%4095s", archive_path);
 
-            strcat(archive_name, "_1");
-        }
-        if (mkdir(archive_name, 0777) == -1) {
-            error("failed to create folder");
-        }
-        chdir(archive_name);
+    char original_dir[4096];
+    getcwd(original_dir, 4096);
+    if (chdir(archive_path) == -1) {
+        error("failed to open folder");
     }
+
+    // if (stat(archive_name, &st) == -1) {
+    //     if (mkdir(archive_name, 0777) == -1) {
+    //         error("failed to create folder");
+    //     }
+    //     chdir(archive_name);
+    // } else {
+    //     while (stat(archive_name, &st) == 0) {
+    //         if (strlen(archive_name) > 253) {
+    //             error("archive name is too big");
+    //         }
+
+    //         strcat(archive_name, "_1");
+    //     }
+    //     if (mkdir(archive_name, 0777) == -1) {
+    //         error("failed to create folder");
+    //     }
+    //     chdir(archive_name);
+    // }
 
     while ((ch = fgetc(archive)) != '\n') {
         info_size++;
